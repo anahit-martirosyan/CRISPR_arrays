@@ -3,14 +3,14 @@ import java.util.Vector;
 public class CRISPRArraysFinder {
 
     // TODO remove hardcoded values
-    private static String sequenceFile = "";
-    private static DNASequence dnaSequence;
-    private static int minNumberRepeats = 3;
-    private static int minRepeatLength = 19;
-    private static int maxRepeatLength = 38;
-    private static int searchWindowLength = 8;
-    private static int minSpacerLength = 19;
-    private static int maxSpacerLength = 48;
+    public static String sequenceFile = "";
+    public static DNASequence dnaSequence;
+    public static int minNumberRepeats = 3;
+    public static int minRepeatLength = 19;
+    public static int maxRepeatLength = 38;
+    public static int searchWindowLength = 8;
+    public static int minSpacerLength = 19;
+    public static int maxSpacerLength = 48;
 
     /**
      * Parses command line arguments and sets members of the class
