@@ -3,13 +3,11 @@ import java.util.Vector;
 public class CRISPRArray {
     private DNASequence dnaSequence;
     private Vector<Integer> repeatIndices;
-    private int repeatsLength;
-    private int numRepeats;
+    private int repeatLength;
 
     CRISPRArray(DNASequence dnaSequence, int firstRepeatIndex, int secondRepeatIndex, int length) {
         this.dnaSequence = dnaSequence;
         repeatIndices = new Vector<>();
-        numRepeats = 0;
         addRepeat(firstRepeatIndex);
         addRepeat(secondRepeatIndex);
         setRepeatLength(length);
@@ -17,11 +15,14 @@ public class CRISPRArray {
 
     public void addRepeat(int index) {
         repeatIndices.add(index);
-        ++numRepeats;
     }
 
+    public int getRepeatLength() {
+        return repeatLength;
+    }
+    
     public void setRepeatLength(int len) {
-       repeatsLength = len;
+       repeatLength = len;
     }
 
     public int getRepeatIndex(int index) {
@@ -29,7 +30,34 @@ public class CRISPRArray {
     }
 
     public int getNumRepeats() {
-        return numRepeats;
+        return repeatIndices.size();
+    }
+
+    public int getShortestRepeatSpacing() {
+        int shortestRepeatSpacing = repeatIndices.get(1) - repeatIndices.get(0);
+        for (int i = 0; i < getNumRepeats() - 1; i++) {
+            int currRepeatIndex = repeatIndices.get(i);
+            int nextRepeatIndex = repeatIndices.get(i + 1);
+            int currRepeatSpacing = nextRepeatIndex - currRepeatIndex;
+            if (currRepeatSpacing < shortestRepeatSpacing)
+                shortestRepeatSpacing = currRepeatSpacing;
+        }
+        return shortestRepeatSpacing;
+    }
+
+    void extendLeft(int size) {
+        for (int i = 0; i < repeatIndices.size(); ++i) {
+            repeatIndices.setElementAt(repeatIndices.get(i) - size, i);
+        }
+        setRepeatLength(repeatLength + size);
+    }
+
+    void extendRight(int size) {
+        setRepeatLength(repeatLength + size);
+    }
+
+    public int getEndIndex() {
+        return repeatIndices.get(getNumRepeats() - 1) + repeatLength;
     }
 
     public String toString() {
@@ -37,7 +65,7 @@ public class CRISPRArray {
         for (int i = 0; i < repeatIndices.size(); ++i) {
             int repeatIndex = repeatIndices.get(i);
             int nextRepeatIndex = (i < repeatIndices.size() - 1) ? repeatIndices.get(i + 1) : -1;
-            int spacerIndex = repeatIndex + repeatsLength + 1;
+            int spacerIndex = repeatIndex + repeatLength + 1;
 
             String repeat = dnaSequence.subSequence(repeatIndex, spacerIndex);
             String spacer = (nextRepeatIndex > 0) ? dnaSequence.subSequence(spacerIndex, nextRepeatIndex) : "";
@@ -45,31 +73,4 @@ public class CRISPRArray {
         }
         return result;
     }
-
-	public CRISPRArray()
-	{	repeatIndices = new Vector();
-		repeatsLength = 0;
-	}
-
-	public CRISPRArray(Vector positions, int length)
-	{	repeatIndices = positions;
-		repeatsLength = length;
-	}
-
-	public Vector repeats()
-	{	return repeatIndices;
-	}
-
-	public int repeatLength()
-	{	return repeatsLength;
-	}
-
-	public int repeatAt(int i)
-	{	return ((Integer)repeatIndices.elementAt(i)).intValue();
-	}
-
-	public int numRepeats()
-	{	return repeatIndices.size();
-	}
-
 }

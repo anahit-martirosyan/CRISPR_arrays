@@ -9,14 +9,15 @@ public class CRISPRSearchEngine {
     private String currentPattern;
 
     private CRISPRArray currentCRISPRArray;
-    private int minNumberRepeats = 3;
-    private int minRepeatLength = 19;
-    private int maxRepeatLength = 38;
-    private int searchWindowLength = 8;
-    private int minSpacerLength = 19;
-    private int maxSpacerLength = 48;
+    private int minNumberRepeats;
+    private int minRepeatLength;
+    private int maxRepeatLength;
+    private int searchWindowLength;
+    private int minSpacerLength;
+    private int maxSpacerLength;
 
     private static final int SCAN_RANGE = 24;
+    private static final double SIMILARITY_THRESHOLD = 0.75;
 
     private double spacerToSpacerMaxSimilarity = 0.62;
     private int spacerToSpacerLengthDiff = 12;
@@ -84,7 +85,6 @@ public class CRISPRSearchEngine {
             return;
         }
 
-
         String searchSequence =  dnaSequence.subSequence(beginSearch, endSearch);
 
         int index = BoyerMoore.search(searchSequence, currentPattern); // index relative to the beginning of search region
@@ -98,115 +98,81 @@ public class CRISPRSearchEngine {
         currentCRISPRArray = new CRISPRArray(dnaSequence, beginIndex, repeatIndex, currentPattern.length());
 
         scanRight();
-        System.out.println(currentCRISPRArray);
+    }
+
+    /**
+     * Checks if nucleotides in extended position do not differ more than a SIMILARITY_THRESHOLD
+     * @param extensionLength is positive if extending to right, and negative if extending to left.
+     * */
+    private boolean canExtendTo(int extensionLength) {
+        HashMap<Character, Integer> nucleotideCountMap = new HashMap<>();
+
+        for (int k = 0; k < currentCRISPRArray.getNumRepeats(); k++ ) {
+            int currRepeatStartIndex = currentCRISPRArray.getRepeatIndex(k);
+            char lastNucleotide = dnaSequence.getNucleotide(currRepeatStartIndex + extensionLength);
+            int count = nucleotideCountMap.get(lastNucleotide) != null ? nucleotideCountMap.get(lastNucleotide) : 0;
+            nucleotideCountMap.put(lastNucleotide, count + 1);
+        }
+
+        for (int count: nucleotideCountMap.values()) {
+            double percent = (double)count / currentCRISPRArray.getNumRepeats();
+            if (percent > SIMILARITY_THRESHOLD) {
+                return true;
+            }
+        }
+        return false;
 
     }
 
     /**
-     * Extends exact repeats to left and right
-     * @param crispr a CRISPR array with only exact repeats
+     * Extends crispr repeats to right. Checks if nucleotides do not differ more than a SIMILARITY_THRESHOLD
      * */
-    private CRISPRArray extendExactRepeats(CRISPRArray crispr) {
-        // expand repeats if new nucleotides do not differ than a given threshold
-        // TODO modify crispr object
-    	int numRepeats = crispr.numRepeats();
-		int firstRposition = crispr.repeatAt(0);
-		int lastRposition = crispr.repeatAt(numRepeats-1);
+    private void extendRight() {
+        int extensionLength = currentCRISPRArray.getRepeatLength();
+        int shortestRepeatSpacing = currentCRISPRArray.getShortestRepeatSpacing();
+        int maxExtensionLength = shortestRepeatSpacing - CRISPRArraysFinder.minSpacerLength;
+        int lastRepeatIndex = currentCRISPRArray.getRepeatIndex(currentCRISPRArray.getNumRepeats() - 1);
 
-		int shortestRepeatSpacing = crispr.repeatAt(1) - crispr.repeatAt(0);
-		for (int i = 0; i < crispr.numRepeats() - 1; i++) {
-			int currRepeatIndex = crispr.repeatAt(i);
-			int nextRepeatIndex = crispr.repeatAt(i + 1);
-			int currRepeatSpacing = nextRepeatIndex - currRepeatIndex;
-			if (currRepeatSpacing < shortestRepeatSpacing)
-				shortestRepeatSpacing = currRepeatSpacing;
-		}
+        while (extensionLength <= maxExtensionLength && lastRepeatIndex + extensionLength < dnaSequence.length()) {
+            // extend to right
+            if (canExtendTo(extensionLength)) {
+                ++extensionLength;
+            } else {
+                break;
+            }
+        }
+        --extensionLength;
+        currentCRISPRArray.extendRight(extensionLength - currentCRISPRArray.getRepeatLength());
+    }
 
-		int sequenceLength = dnaSequence.length();
+    /**
+     * Extends crispr repeats to left. Checks if nucleotides do not differ more than a SIMILARITY_THRESHOLD
+     * */
+    private void extendLeft() {
+        int extensionLength = 0;
+        int shortestRepeatSpacing = currentCRISPRArray.getShortestRepeatSpacing();
+        int maxExtensionLength = shortestRepeatSpacing - CRISPRArraysFinder.minSpacerLength - currentCRISPRArray.getRepeatLength() + 1;
+        int firstRepeatIndex = currentCRISPRArray.getRepeatIndex(0);
 
-		int rightExtensionLength = CRISPRArraysFinder.searchWindowLength;
-		int maxRightExtensionLength = shortestRepeatSpacing - CRISPRArraysFinder.minSpacerLength;
+        while (extensionLength <= maxExtensionLength && firstRepeatIndex - extensionLength >= 0) {
+            // extend to left
+            if (canExtendTo(-extensionLength)) {
+                ++extensionLength;
+            } else {
+                break;
+            }
+        }
+        --extensionLength;
+        currentCRISPRArray.extendLeft(extensionLength);
+    }
 
-
-		int currRepeatStartIndex;
-		String currRepeat;
-		int Acount, Ccount, Gcount, Tcount;
-		Acount = Ccount = Gcount = Tcount = 0;
-		double thresholdVal;
-		boolean done = false;
-
-		thresholdVal = .75;
-
-		//(from the right side) extend the length of the repeat to the right as long as the last base of all repeats are at least threshold
-		while (!done && (rightExtensionLength <= maxRightExtensionLength) && (lastRposition + rightExtensionLength < sequenceLength))
-		{	for (int k = 0; k < crispr.numRepeats(); k++ ) {	currRepeatStartIndex = crispr.repeatAt(k);
-				currRepeat = dnaSequence.subSequence(currRepeatStartIndex, currRepeatStartIndex + rightExtensionLength);
-				char lastChar = currRepeat.charAt(currRepeat.length() - 1);
-
-				if (lastChar == 'A')	Acount++;
-				if (lastChar == 'C')	Ccount++;
-				if (lastChar == 'G')	Gcount++;
-				if (lastChar == 'T')	Tcount++;
-			}
-
-			double percentA = (double)Acount/crispr.numRepeats();
-			double percentC = (double)Ccount/crispr.numRepeats();
-			double percentG = (double)Gcount/crispr.numRepeats();
-			double percentT = (double)Tcount/crispr.numRepeats();
-
-			if ( (percentA >= thresholdVal) || (percentC >= thresholdVal) || (percentG >= thresholdVal) || (percentT >= thresholdVal) )
-			{	rightExtensionLength++;
-				Acount = Ccount = Tcount = Gcount = 0;
-			} else {	
-				done = true;
-			}
-		}
-		rightExtensionLength--;
-
-
- 		int leftExtensionLength = 0;
-      	Acount = Ccount = Tcount = Gcount = 0;
-     	done = false;
-		int maxLeftExtensionLength = shortestRepeatSpacing - CRISPRArraysFinder.minSpacerLength - rightExtensionLength;
-
-		//(from the left side) extends the length of the repeat to the left as long as the first base of all repeats is at least threshold
-		while (!done && (leftExtensionLength <= maxLeftExtensionLength) && (firstRposition - leftExtensionLength >= 0) )
-		{ 	for (int k = 0; k < crispr.numRepeats(); k++ ) {       
-				currRepeatStartIndex = crispr.repeatAt(k);
-				char firstChar = dnaSequence.getNucleotide(currRepeatStartIndex - leftExtensionLength);
-
-					if (firstChar == 'A')    Acount++;
-					if (firstChar == 'C')    Ccount++;
-					if (firstChar == 'G')    Gcount++;
-					if (firstChar == 'T')    Tcount++;
-			}
-
-			double percentA = (double)Acount/crispr.numRepeats();
-			double percentC = (double)Ccount/crispr.numRepeats();
-			double percentG = (double)Gcount/crispr.numRepeats();
-			double percentT = (double)Tcount/crispr.numRepeats();
-
-			if ( (percentA >= thresholdVal) || (percentC >= thresholdVal) || (percentG >= thresholdVal) || (percentT >= thresholdVal)  )
-			{       leftExtensionLength++;
-					Acount = Ccount = Tcount = Gcount = 0;
-			} else {       
-				done = true;
-			}
-		}
-		leftExtensionLength--;
-
-		Vector newPositions = (Vector)(crispr.repeats()).clone();
-
-		for (int m = 0; m < newPositions.size(); m++)
-		{	int newValue = crispr.repeatAt(m) - leftExtensionLength;
- 			newPositions.setElementAt(new Integer(newValue), m);
-		}
-
-		int actualPatternLength = rightExtensionLength + leftExtensionLength;
-
-
-		return new CRISPRArray(newPositions, actualPatternLength);
-
+    /**
+     * Extends exact repeats to left and right
+     * */
+    private void extendExactRepeats() {
+        // expand repeats if new nucleotides do not differ more than a SIMILARITY_THRESHOLD
+        extendRight();
+        extendLeft();
     }
 
     /**
@@ -217,7 +183,7 @@ public class CRISPRSearchEngine {
      * 4. Checks if spacers differ from repeats (uses Levenshtein Distance)
      * 5. Checks that Spacers are similar sized
      * */
-    private boolean validateCRISPRArray(CRISPRArray crispr) {
+    private boolean validateCRISPRArray() {
         return true;   
     }
 
@@ -242,9 +208,12 @@ public class CRISPRSearchEngine {
             skips = 1;
         for(int i = 0; i < dnaSequence.length() - searchWindowLength; i += skips) {
             findExactRepeats(i);
-            // TODO
             if (currentCRISPRArray != null) {
-                addCRISPRArray();
+                extendExactRepeats();
+                if (validateCRISPRArray()) {
+                    i = currentCRISPRArray.getEndIndex() + 1;
+                    addCRISPRArray();
+                }
             }
         }
         return crisprArrays;
