@@ -6,4 +6,12 @@ public class DNASequence {
         // set sequence
         return new DNASequence();
     }
+
+    public int length() {
+        return sequence.length();
+    }
+
+    public String subSequence(int beginIndex, int endIndex) {
+        return sequence.substring(beginIndex, endIndex);
+    }
 }

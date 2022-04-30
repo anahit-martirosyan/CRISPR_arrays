@@ -23,14 +23,18 @@ public class CRISPRArraysFinder {
      * @return vector of CRISPR arrays found in the sequence
      * */
     private static Vector<CRISPRArray> findCRIPSRs(DNASequence dnaSequence) {
-        CRISPRSearchEngine searchEngine = new CRISPRSearchEngine(dnaSequence);
+        CRISPRSearchEngine searchEngine = new CRISPRSearchEngine(dnaSequence, minNumberRepeats, minRepeatLength, maxRepeatLength, searchWindowLength, minSpacerLength, maxSpacerLength);
         return searchEngine.findCRISPRs();
     }
 
     /**
      * Function visualizing program output
      * */
-    private static void printCRISPRs(Vector<CRISPRArray> crisprs) {}
+    private static void printCRISPRs(Vector<CRISPRArray> crisprs) {
+        for (CRISPRArray crispr: crisprs) {
+            System.out.println(crispr);
+        }
+    }
 
     public static void main(String[] args) {
 
@@ -38,5 +42,6 @@ public class CRISPRArraysFinder {
         dnaSequence = DNASequence.build(sequenceFile);
         Vector<CRISPRArray> crisprs = findCRIPSRs(dnaSequence);
         printCRISPRs(crisprs);
+
     }
 }
