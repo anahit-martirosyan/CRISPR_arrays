@@ -1,6 +1,6 @@
 public class DNASequence {
     // TODO remove hardcoded value
-    public static String sequence = "GTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTGCGCTGGTTGATTTCTTCTTGCGCTTTTTGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTTATATGAACATAACTCAATTTGTAAAAAAGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACAGGAATATCCGCAATAATTAATTGCGCTCTGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACAGTGCCGAGGAAAAATTAGGTGCGCTTGGCGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTAAATTTGTTTAGCAGGTAAACCGTGCTTTGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTTCAGCACACTGAGACTTGTTGAGTTCCATGTTTTAGAGCTATGCTGTTTTGAATGGTCTCCATTC";;
+    private String sequence = "GTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTGCGCTGGTTGATTTCTTCTTGCGCTTTTTGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTTATATGAACATAACTCAATTTGTAAAAAAGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACAGGAATATCCGCAATAATTAATTGCGCTCTGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACAGTGCCGAGGAAAAATTAGGTGCGCTTGGCGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTAAATTTGTTTAGCAGGTAAACCGTGCTTTGTTTTAGAGCTATGCTGTTTTGAATGGTCCCAAAACTTCAGCACACTGAGACTTGTTGAGTTCCATGTTTTAGAGCTATGCTGTTTTGAATGGTCTCCATTC";;
     public static DNASequence build(String sequenceFile) {
         // read sequence file
         // set sequence
@@ -10,14 +10,22 @@ public class DNASequence {
 	{
 		return sequence.length();
 	}
-	
+
+    public String subSequence(int beginIndex, int endIndex) {
+        return sequence.substring(beginIndex, endIndex);
+    }
+
+    public char getNucleotide(int index) {
+        return sequence.charAt(index);
+    }
+
 	/**
 	 * source: https://javatutoring.com/hamming-distance-java/
 	 * @param s1
 	 * @param s2
 	 * @return
 	 */
-	
+
 	public static int hammingdistance(String s1,String s2)
 	{
 	   int distance=0;
@@ -25,14 +33,14 @@ public class DNASequence {
                 return -1;
 	    }  else  {
             for(int i=0;i<s1.length();i++)
-	    { 
+	    {
 	        if(s1.charAt(i)!=s2.charAt(i))
-			distance++;
-	    }    
+                distance++;
+	    }
             return distance;
-	    } 
-     } 
-	
+	    }
+     }
+
 	/**
 	 * source: https://www.baeldung.com/java-levenshtein-distance#:~:text=What%20Is%20the%20Levenshtein%20Distance,to%20transform%20x%20into%20y.
 	 * @param s1
@@ -51,9 +59,9 @@ public class DNASequence {
 	                a[i][j] = i;
 	            }
 	            else {
-	                a[i][j] = Minimum(a[i - 1][j - 1] 
-	                 + costOfSubstitution(s1.charAt(i - 1), s2.charAt(j - 1)), 
-	                  a[i - 1][j] + 1, 
+	                a[i][j] = Minimum(a[i - 1][j - 1]
+	                 + costOfSubstitution(s1.charAt(i - 1), s2.charAt(j - 1)),
+	                  a[i - 1][j] + 1,
 	                  a[i][j - 1] + 1);
 	            }
 	        }
@@ -61,7 +69,7 @@ public class DNASequence {
 
 	    return a[s1.length()][s2.length()];
 	}
-	
+
 	 public static int costOfSubstitution(char a, char b) {
 	        return a == b ? 0 : 1;
 	    }
@@ -76,6 +84,4 @@ public class DNASequence {
 	    	return min;
 
 	  }
-
-	
 }
