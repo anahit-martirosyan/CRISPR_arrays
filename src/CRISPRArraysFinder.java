@@ -124,12 +124,38 @@ public class CRISPRArraysFinder {
      * Function visualizing program output
      * */
     private static void printCRISPRs(Vector<CRISPRArray> crisprs, PrintWriter writer) {
-        for (CRISPRArray crispr: crisprs) {
+        if (writer != null) {
+            writer.write("ORGANISM: " + dnaSequence.getHeader());
+        } else {
+            System.out.println("ORGANISM: " + dnaSequence.getHeader());
+        }
+        for (int i = 0; i < crisprs.size(); ++i) {
+            CRISPRArray crispr = crisprs.get(i);
             if (writer != null) {
+                writer.write("CRISPR " + i);
                 writer.write(crispr.toString());
             } else {
+                System.out.println("CRISPR " + i);
                 System.out.println(crispr);
             }
+        }
+    }
+
+    /**
+     * Writes program output to outputFile.
+     * */
+    private static void writeOutput(Vector<CRISPRArray> crisprs) {
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(outputFile, "UTF-8");
+            printCRISPRs(crisprs, writer);
+        }
+        catch (IOException ex) {
+            System.out.println("Exception while writing to file " + outputFile + ".");
+            System.out.println(ex);
+        }
+        finally {
+            writer.close();
         }
     }
 
@@ -139,31 +165,17 @@ public class CRISPRArraysFinder {
             return;
         }
 
-        System.out.println("sequenceFile: " + sequenceFile);
-        System.out.println("minNumberRepeats: " + minNumberRepeats);
-        System.out.println("minRepeatLength: " + minRepeatLength);
-        System.out.println("maxRepeatLength: " + maxRepeatLength);
-        System.out.println("searchWindowLength: " + searchWindowLength);
-        System.out.println("minSpacerLength: " + minSpacerLength);
-        System.out.println("maxSpacerLength: " + maxSpacerLength);
-
         dnaSequence = DNASequence.build(sequenceFile);
+        if (dnaSequence == null) {
+            System.out.println("Not a correct fasta file. Exiting.");
+            return;
+        }
+
         Vector<CRISPRArray> crisprs = findCRIPSRs(dnaSequence);
         printCRISPRs(crisprs, null);
 
         if (!outputFile.isEmpty()) {
-            PrintWriter writer = null;
-            try {
-                writer = new PrintWriter(outputFile, "UTF-8");
-                printCRISPRs(crisprs, writer);
-            }
-            catch (IOException ex) {
-                System.out.println("Exception while writing to file " + outputFile + ".");
-                System.out.println(ex);
-            }
-            finally {
-                writer.close();
-            }
+            writeOutput(crisprs);
         }
     }
 }

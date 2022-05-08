@@ -1,3 +1,4 @@
+import java.security.PublicKey;
 import java.util.Vector;
 
 import static java.lang.Math.*;
@@ -21,6 +22,14 @@ public class CRISPRArray {
 
     public int getSpacerLength(int index) {
         return getRepeatPosition(index + 1) - (getRepeatPosition(index) + repeatLength);
+    }
+
+    public int getAverageSpacerLength() {
+        int totalSpacerLength = 0;
+        for (int i = 0; i < getNumSpacers(); ++i) {
+            totalSpacerLength += getSpacerLength(i);
+        }
+        return totalSpacerLength / getNumSpacers();
     }
 
     public int getRepeatLength() {
@@ -70,6 +79,10 @@ public class CRISPRArray {
      * */
     void extendRight(int size) {
         setRepeatLength(repeatLength + size);
+    }
+
+    public int getStartIndex() {
+        return repeatIndices.get(0);
     }
 
     public int getEndIndex() {
@@ -157,7 +170,11 @@ public class CRISPRArray {
     }
 
     public String toString() {
+//        String result = ("POSITION" + "\t" + "REPEAT" + "\t" + "POSITION" + "\t" + "SPACER" + "\n");
         String result = "";
+        result += "Range: " + getStartIndex() + "-" + getEndIndex() + "\n";
+
+        result += "---------------------------------------------------------------------------------------------\n";
         for (int i = 0; i < repeatIndices.size(); ++i) {
             int repeatIndex = repeatIndices.get(i);
             int nextRepeatIndex = (i < repeatIndices.size() - 1) ? repeatIndices.get(i + 1) : -1;
@@ -167,6 +184,9 @@ public class CRISPRArray {
             String spacer = (nextRepeatIndex > 0) ? dnaSequence.subSequence(spacerIndex, nextRepeatIndex) : "";
             result += (repeatIndex + "\t" + repeat + "\t" + spacerIndex + "\t" + spacer + "\n");
         }
+        result += "---------------------------------------------------------------------------------------------\n";
+        result += "Repeats:" + getNumRepeats() + "\t" + "Average Repeat Length: " + getRepeatLength() + "\t"
+                + "Average Spacer Length: " + getAverageSpacerLength() + "\n";
         return result;
     }
 }
