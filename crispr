@@ -1,0 +1,26 @@
+#!/bin/bash
+
+WORKING_DIR=`pwd`
+
+outFileFound=false
+OUT_FILE=""
+for arg in "$@"
+do
+	if [ "$outFileFound" = true ]
+	then
+		OUT_FILE=$arg
+		break
+	fi
+
+	if [ "$arg" = "-outputFile" ]
+       	then
+		outFileFound=true
+	fi
+done
+
+cd ./src
+javac *.java
+java CRISPRArraysFinder $@
+
+mv "$OUT_FILE" "$WORKING_DIR/$OUT_FILE"
+cd $WORKING_DIR
