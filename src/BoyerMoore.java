@@ -2,11 +2,14 @@ public class BoyerMoore {
 
     static int NO_OF_CHARS = 256;
 
-    //A utility function to get maximum of two integers
+    /**
+     * A utility function to get maximum of two integers.
+     */
     static int max (int a, int b) { return (a > b)? a: b; }
 
-    //The preprocessing function for Boyer Moore's
-    //bad character heuristic
+    /**
+     * The preprocessing function for Boyer Moore's bad character heuristic.
+     */
     static void badCharHeuristic( char []str, int size,int badchar[])
     {
 
@@ -20,6 +23,9 @@ public class BoyerMoore {
             badchar[(int) str[i]] = i;
     }
 
+    /**
+     * The preprocessing function for Boyer Moore's good suffix heuristic.
+     */
     static void preprocess_strong_suffix(int []shift, int []bpos,
                                          char []pat, int m)
     {
@@ -52,7 +58,9 @@ public class BoyerMoore {
         }
     }
 
-    //Preprocessing for case 2
+    /**
+     * The preprocessing function for Boyer Moore's good suffix heuristic (case 2).
+     */
     static void process_case2(int []shift, int []bpos,
                               char []pat, int m)
     {
@@ -74,8 +82,9 @@ public class BoyerMoore {
         }
     }
 
-    /*Search for a pattern in given text using
-    Boyer Moore algorithm with Good suffix rule */
+    /**
+     * Searches for a pattern in given text using Boyer Moore algorithm with Good suffix rule.
+     * */
     static int search(String textStr, String patStr)
     {
         char[] text = textStr.toCharArray();
@@ -88,7 +97,7 @@ public class BoyerMoore {
 
         int[] badchar = new int[NO_OF_CHARS];
 
-//        badCharHeuristic(pat, m, badchar);
+        badCharHeuristic(pat, m, badchar);
 
         int []bpos = new int[m + 1];
         int []shift = new int[m + 1];
@@ -121,11 +130,10 @@ public class BoyerMoore {
             /*pat[i] != pat[s+j] so shift the pattern
             shift[j+1] times */
                 int badCharShift = (s + m < n) ? m - badchar[text[s + m]] : 1;
-//                s += max(shift[j + 1], badCharShift);
-                s += shift[j + 1];
+                s += max(shift[j + 1], badCharShift);
+//                s += shift[j + 1];
             }
         }
         return -1;
     }
 }
-

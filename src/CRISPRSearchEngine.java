@@ -18,10 +18,11 @@ public class CRISPRSearchEngine {
 
     private static final int SCAN_RANGE = 24;
     private static final double SIMILARITY_THRESHOLD = 0.75;
+    private static final double SPACER_TO_SPACER_MAX_SIMILARITY = 0.62;
+    
 
-    private double spacerToSpacerMaxSimilarity = 0.62;
-    private int spacerToSpacerLengthDiff = 12;
-    private int spacerToRepeatLengthDiff = 30;
+    private static final int SPACER_TO_SPACER_LENGTH_DIFF = 12;
+    private static final int SPACER_TO_REPEAT_LENGTH_DIFF = 30;
     private Vector<CRISPRArray> crisprArrays;
 
     CRISPRSearchEngine(DNASequence dnaSequence, int minNumberRepeats, int minRepeatLength,
@@ -42,8 +43,8 @@ public class CRISPRSearchEngine {
      * @precondition currentCRISPRArray is initialized and have at least two repeats
      * */
     private void scanRight() {
-        int lastRepeatIndex = currentCRISPRArray.getRepeatIndex(currentCRISPRArray.getNumRepeats() - 1);
-        int secondToLastRepeatIndex = currentCRISPRArray.getRepeatIndex(currentCRISPRArray.getNumRepeats() - 2);
+        int lastRepeatIndex = currentCRISPRArray.getRepeatPosition(currentCRISPRArray.getNumRepeats() - 1);
+        int secondToLastRepeatIndex = currentCRISPRArray.getRepeatPosition(currentCRISPRArray.getNumRepeats() - 2);
 
         while(true) {
             int repeatSpacing = lastRepeatIndex - secondToLastRepeatIndex;
@@ -77,7 +78,6 @@ public class CRISPRSearchEngine {
         // find sequence matching currentPattern using Boyer-Moore algorithm
         // scan to right to find more matches
 
-        currentPattern = dnaSequence.subSequence(beginIndex, beginIndex + searchWindowLength);
         int beginSearch = beginIndex + minSpacerLength + minRepeatLength;
         int endSearch = min(beginIndex + maxSpacerLength + maxRepeatLength + searchWindowLength + 1, dnaSequence.length());
 
@@ -108,7 +108,7 @@ public class CRISPRSearchEngine {
         HashMap<Character, Integer> nucleotideCountMap = new HashMap<>();
 
         for (int k = 0; k < currentCRISPRArray.getNumRepeats(); k++ ) {
-            int currRepeatStartIndex = currentCRISPRArray.getRepeatIndex(k);
+            int currRepeatStartIndex = currentCRISPRArray.getRepeatPosition(k);
             char lastNucleotide = dnaSequence.getNucleotide(currRepeatStartIndex + extensionLength);
             int count = nucleotideCountMap.get(lastNucleotide) != null ? nucleotideCountMap.get(lastNucleotide) : 0;
             nucleotideCountMap.put(lastNucleotide, count + 1);
@@ -125,13 +125,15 @@ public class CRISPRSearchEngine {
     }
 
     /**
-     * Extends crispr repeats to right. Checks if nucleotides do not differ more than a SIMILARITY_THRESHOLD
+     * Extends crispr repeats to right. Checks if nucleotides do not differ more than SIMILARITY_THRESHOLD
      * */
     private void extendRight() {
+        assert currentCRISPRArray != null;
+
         int extensionLength = currentCRISPRArray.getRepeatLength();
         int shortestRepeatSpacing = currentCRISPRArray.getShortestRepeatSpacing();
         int maxExtensionLength = shortestRepeatSpacing - CRISPRArraysFinder.minSpacerLength;
-        int lastRepeatIndex = currentCRISPRArray.getRepeatIndex(currentCRISPRArray.getNumRepeats() - 1);
+        int lastRepeatIndex = currentCRISPRArray.getRepeatPosition(currentCRISPRArray.getNumRepeats() - 1);
 
         while (extensionLength <= maxExtensionLength && lastRepeatIndex + extensionLength < dnaSequence.length()) {
             // extend to right
@@ -146,13 +148,15 @@ public class CRISPRSearchEngine {
     }
 
     /**
-     * Extends crispr repeats to left. Checks if nucleotides do not differ more than a SIMILARITY_THRESHOLD
+     * Extends crispr repeats to left. Checks if nucleotides do not differ more than SIMILARITY_THRESHOLD
      * */
     private void extendLeft() {
+        assert currentCRISPRArray != null;
+
         int extensionLength = 0;
         int shortestRepeatSpacing = currentCRISPRArray.getShortestRepeatSpacing();
         int maxExtensionLength = shortestRepeatSpacing - CRISPRArraysFinder.minSpacerLength - currentCRISPRArray.getRepeatLength() + 1;
-        int firstRepeatIndex = currentCRISPRArray.getRepeatIndex(0);
+        int firstRepeatIndex = currentCRISPRArray.getRepeatPosition(0);
 
         while (extensionLength <= maxExtensionLength && firstRepeatIndex - extensionLength >= 0) {
             // extend to left
@@ -170,10 +174,21 @@ public class CRISPRSearchEngine {
      * Extends exact repeats to left and right
      * */
     private void extendExactRepeats() {
+        assert currentCRISPRArray != null;
         // expand repeats if new nucleotides do not differ more than a SIMILARITY_THRESHOLD
         extendRight();
         extendLeft();
     }
+
+    private boolean hasValidNumberOfRepeats() {
+        return currentCRISPRArray.getNumRepeats() >= minNumberRepeats;
+    }
+
+    private boolean hasValidRepeatLength() {
+        return currentCRISPRArray.getRepeatLength() >= minRepeatLength
+                && currentCRISPRArray.getRepeatLength() <= maxRepeatLength;
+    }
+
 
     /**
      * Validates given CRISPR array
@@ -183,10 +198,18 @@ public class CRISPRSearchEngine {
      * 4. Checks if spacers differ from repeats (uses Levenshtein Distance)
      * 5. Checks that Spacers are similar sized
      * */
-    private boolean validateCRISPRArray() {
-        return true;   
+    private boolean isValidCRISPRArray() {
+        assert currentCRISPRArray != null;
+
+        return hasValidNumberOfRepeats() && hasValidRepeatLength()
+                && currentCRISPRArray.hasNonRepeatingSpacers(SPACER_TO_SPACER_MAX_SIMILARITY)
+                && currentCRISPRArray.hasSimilarlySizedSpacers(SPACER_TO_SPACER_LENGTH_DIFF, SPACER_TO_REPEAT_LENGTH_DIFF);
     }
 
+    /**
+    * Adds currentCRISPRArray to crisprArrays.
+     * Should be called after currentCRISPRArray is validated.
+    * */
     void addCRISPRArray() {
         crisprArrays.add(currentCRISPRArray);
         currentCRISPRArray = null;
@@ -197,20 +220,21 @@ public class CRISPRSearchEngine {
      * @return vector of CRISPR arrays found in the sequence
      * */
     public Vector<CRISPRArray> findCRISPRs() {
-        // select search window size sequence - currentPattern,
-        // find matches to currentPattern,
-        // extend found repeats
-        // validate found CRISPR array
-        // add CRISPR array to CRISPRSArrays if it is valid
+        // 1. select search window size sequence - currentPattern,
+        // 2. find matches to currentPattern,
+        // 3. extend found repeats
+        // 4. validate found CRISPR array
+        // 5. add CRISPR array to CRISPRSArrays if it is valid
 
         int skips = minRepeatLength - (2 * searchWindowLength - 1);
         if (skips < 1)
             skips = 1;
         for(int i = 0; i < dnaSequence.length() - searchWindowLength; i += skips) {
+            currentPattern = dnaSequence.subSequence(i, i + searchWindowLength);
             findExactRepeats(i);
             if (currentCRISPRArray != null) {
                 extendExactRepeats();
-                if (validateCRISPRArray()) {
+                if (isValidCRISPRArray()) {
                     i = currentCRISPRArray.getEndIndex() + 1;
                     addCRISPRArray();
                 }
