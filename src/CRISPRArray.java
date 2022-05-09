@@ -178,7 +178,7 @@ public class CRISPRArray {
         for (int i = 0; i < repeatIndices.size(); ++i) {
             int repeatIndex = repeatIndices.get(i);
             int nextRepeatIndex = (i < repeatIndices.size() - 1) ? repeatIndices.get(i + 1) : -1;
-            int spacerIndex = repeatIndex + repeatLength + 1;
+            int spacerIndex = repeatIndex + repeatLength;
 
             String repeat = dnaSequence.subSequence(repeatIndex, spacerIndex);
             String spacer = (nextRepeatIndex > 0) ? dnaSequence.subSequence(spacerIndex, nextRepeatIndex) : "";

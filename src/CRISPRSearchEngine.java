@@ -121,7 +121,6 @@ public class CRISPRSearchEngine {
             }
         }
         return false;
-
     }
 
     /**
@@ -144,7 +143,7 @@ public class CRISPRSearchEngine {
             }
         }
         --extensionLength;
-        currentCRISPRArray.extendRight(extensionLength - currentCRISPRArray.getRepeatLength());
+        currentCRISPRArray.extendRight(extensionLength - currentCRISPRArray.getRepeatLength() + 1);
     }
 
     /**
