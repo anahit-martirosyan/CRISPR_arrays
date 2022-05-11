@@ -126,16 +126,22 @@ public class CRISPRArraysFinder {
     private static void printCRISPRs(Vector<CRISPRArray> crisprs, PrintWriter writer) {
         if (writer != null) {
             writer.write("ORGANISM: " + dnaSequence.getHeader());
+            if (crisprs.isEmpty()) {
+                writer.write("No CRISPS arrays found.");
+            }
         } else {
             System.out.println("ORGANISM: " + dnaSequence.getHeader());
+            if (crisprs.isEmpty()) {
+                System.out.println("No CRISPS arrays found.");
+            }
         }
         for (int i = 0; i < crisprs.size(); ++i) {
             CRISPRArray crispr = crisprs.get(i);
             if (writer != null) {
-                writer.write("CRISPR " + i);
+                writer.write("CRISPR " + (i + 1));
                 writer.write(crispr.toString());
             } else {
-                System.out.println("CRISPR " + i);
+                System.out.println("CRISPR " + (i + 1));
                 System.out.println(crispr);
             }
         }

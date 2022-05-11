@@ -1,34 +1,7 @@
+/**
+ * source: https://www.baeldung.com/java-levenshtein-distance#:~:text=What%20Is%20the%20Levenshtein%20Distance,to%20transform%20x%20into%20y.
+ */
 public class LevenshteinDistance {
-
-    /**
-     * source: https://javatutoring.com/hamming-distance-java/
-     * @param s1
-     * @param s2
-     * @return
-     */
-
-    // TODO Remove if not used or change name of the class
-    public static int hammingdistance(String s1,String s2)
-    {
-        int distance=0;
-        if (s1.length()!=s2.length()) {
-            return -1;
-        }  else  {
-            for(int i=0;i<s1.length();i++)
-            {
-                if(s1.charAt(i)!=s2.charAt(i))
-                    distance++;
-            }
-            return distance;
-        }
-    }
-
-    /**
-     * source: https://www.baeldung.com/java-levenshtein-distance#:~:text=What%20Is%20the%20Levenshtein%20Distance,to%20transform%20x%20into%20y.
-     * @param s1
-     * @param s2
-     * @return
-     */
     public static int getLevenshteinDistance(String s1, String s2) {
         int a[][] = new int[s1.length() + 1][s2.length() + 1];
 

@@ -1,3 +1,6 @@
+/**
+ * source: https://www.geeksforgeeks.org/boyer-moore-algorithm-for-pattern-searching/
+ * */
 public class BoyerMoore {
 
     static int NO_OF_CHARS = 256;

@@ -35,10 +35,10 @@ public class DNASequence {
                 currLine = inputFile.readLine();
             }
 
-            sequence = sb.toString();
-            inputFile.close();
+            sequence = sb.toString().toUpperCase();
         } catch (Exception e) {
             System.out.println("Exception while reading from file " + sequenceFile + ".");
+            System.out.println(e);
         } finally {
             try {
                 inputFile.close();

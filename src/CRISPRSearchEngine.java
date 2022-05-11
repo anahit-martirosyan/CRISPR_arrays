@@ -116,7 +116,7 @@ public class CRISPRSearchEngine {
 
         for (int count: nucleotideCountMap.values()) {
             double percent = (double)count / currentCRISPRArray.getNumRepeats();
-            if (percent > SIMILARITY_THRESHOLD) {
+            if (percent >= SIMILARITY_THRESHOLD) {
                 return true;
             }
         }

@@ -170,7 +170,6 @@ public class CRISPRArray {
     }
 
     public String toString() {
-//        String result = ("POSITION" + "\t" + "REPEAT" + "\t" + "POSITION" + "\t" + "SPACER" + "\n");
         String result = "";
         result += "Range: " + getStartIndex() + "-" + getEndIndex() + "\n";
 
@@ -182,7 +181,7 @@ public class CRISPRArray {
 
             String repeat = dnaSequence.subSequence(repeatIndex, spacerIndex);
             String spacer = (nextRepeatIndex > 0) ? dnaSequence.subSequence(spacerIndex, nextRepeatIndex) : "";
-            result += (repeatIndex + "\t" + repeat + "\t" + spacerIndex + "\t" + spacer + "\n");
+            result += ((repeatIndex + 1) + "\t" + repeat + "\t" + (spacerIndex + 1) + "\t" + spacer + "\n");
         }
         result += "---------------------------------------------------------------------------------------------\n";
         result += "Repeats:" + getNumRepeats() + "\t" + "Average Repeat Length: " + getRepeatLength() + "\t"
